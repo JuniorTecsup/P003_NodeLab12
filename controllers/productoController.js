@@ -1,4 +1,5 @@
 let db = require('../models/dbconexion');
+var fs = require('fs');
 
 let articulo = {
   listar( req, res ){
@@ -28,6 +29,38 @@ let articulo = {
       }
     });
   },
+
+  crear2(req, resp) {        
+  var file = req.files.file;    
+  var tmp_path = file.path;    
+    var target_path = './public/images/' + file.name;
+    console.log(target_path);//res
+    val_nombre = req.body.nombre;
+    val_precio = req.body.precio;
+    val_tipo = req.body.tipo;
+    val_descripcion = req.body.descripcion;
+    val_destribuidora = req.body.distribuidora;
+    val_name = file.name;
+    //val_prueba = "GA"
+
+    fs.copyFile(tmp_path,target_path,function(err)    {        
+      if (err) throw err;                
+      fs.unlink(tmp_path, function() {          
+        if (err) throw err;//resp.status(200).send('File uploaded to: ' + target_path);                  
+      });                
+    });
+
+    let sql = "INSERT INTO articulo(nombre,precio,tipo,descripcion,distribuidora,NombreArchivo,RutaArchivo) VALUES(?,?,?,?,?,?,?)";
+      db.query(sql,[val_nombre,val_precio,val_tipo,val_descripcion,val_destribuidora,val_name,target_path],function(err, newData){
+        if(err){
+          console.log(err);
+          resp.sendStatus(500);
+        }else{
+          resp.json('ok');
+        }
+      });
+  },
+
   show( req, res ){
     val_id = req.params.id;
     let sql = "SELECT * FROM articulo WHERE id=?";
